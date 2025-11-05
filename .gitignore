@@ -1,4 +1,10 @@
-**/devel/
-**/logs/
+#Python
+*.pyc
+
+#CMake 
 **/build/
 **/install/
+**/log/
+
+#VS
+**/.vscode/
