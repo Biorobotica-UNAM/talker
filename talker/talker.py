@@ -15,11 +15,11 @@ class Speaker(Node):
 
         # CONFIGURAR PARAMETROS
         self.declare_parameter("enable_tts", True)
-        self.declare_parameter("tts_voice", "slt")      # Voz SLT (femenina)
+        self.declare_parameter("tts_voice", "slt")      # Voz SLT (FEMENINA)
         self.declare_parameter("tts_output", "play")
-        self.declare_parameter("tts_speed", 1.05)       # Voz suave
-        self.declare_parameter("tts_volume", 1.0)       # Volumen base
-        self.declare_parameter("tts_f0_mean", 160)      # Tono suave femenino
+        self.declare_parameter("tts_speed", 1.05)       # VELOCIDAD
+        self.declare_parameter("tts_volume", 1.0)       # VOLUMEN BASE
+        self.declare_parameter("tts_f0_mean", 160)      # TONO DE LA VOZ
         self.declare_parameter("tts_f0_std", 35)        # Variación suave
 
         # CARGAR PARAMETROS
