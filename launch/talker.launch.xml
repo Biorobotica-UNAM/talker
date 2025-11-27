@@ -1,15 +1,12 @@
 <launch>
 
-    <!-- NAMESPACE-->
-    <arg name="namespace" default="talker"/>
-
     <group>
         
-        <push_ros_namespace namespace="$(var namespace)"/>
+        <push_ros_namespace namespace="talker"/>
 
         <node
             pkg="talker"
-            exec="talker"
+            exec="talker_node"
             name="talker_node"
             output="screen">
 
