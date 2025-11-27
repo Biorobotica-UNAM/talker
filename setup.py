@@ -22,7 +22,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'talker = talker.talker:main',
+            'talker_node = talker.talker_node:main',
         ],
     },
 )

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
 # FOR THIS VOICE SYNTHESIZER, “flite” WAS USED, SINCE THE "SOUND_PLAY" PACKAGE THAT JUSTINA ORIGINALLY USED
-# IS NOW VERY OLD AND DOESN'T SUPPORT ROS2.
+# IS NOW VERY OLD AND DOESN'T SUPPORT ROS2. YOU CAN INSTALL flite with 
 
 import rclpy
 from rclpy.node import Node
 import subprocess
-from talker_interfaces.srv import SpeakText
+from talker_interfaces.srv import Talk
 
 
 class Speaker(Node): 
     def __init__(self):
-        super().__init__("speaker")
+        super().__init__("speaker_node")
 
         # CONFIGURAR PARAMETROS
         self.declare_parameter("enable_tts", True)
@@ -32,8 +32,8 @@ class Speaker(Node):
         self._f0_std  = float(self.get_parameter("tts_f0_std").value)
 
         # SERVICIO DE VOZ
-        self._srv = self.create_service(SpeakText, "speak_text", self.HandleSpeakText)
-        self.get_logger().info("Servicio de voz listo: /speak_text")
+        self._srv = self.create_service(Talk, "talk", self.HandleSpeakText)
+        self.get_logger().info("Servicio de voz listo: /talk")
 
         self.get_logger().info(
             f"Voz: {self._voice} | Velocidad: {self._speed} | Volumen: {self._volume} | "
