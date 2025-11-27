@@ -5,8 +5,8 @@ from rclpy.node import Node
 from std_msgs.msg import String, Bool
 import subprocess
 
-speech_topic = "voice/speech"
-speech_status_topic = "voice/speech_status"
+speech_topic = "talker/voice"
+speech_status_topic = "talker/voice_status"
 queue_size = 50
 
 class SpeechSpeaker(Node):
