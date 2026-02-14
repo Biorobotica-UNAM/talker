@@ -1,46 +1,36 @@
 #!/usr/bin/env python3
 
-# FOR THIS VOICE SYNTHESIZER, “flite” WAS USED, SINCE THE "SOUND_PLAY" PACKAGE THAT JUSTINA ORIGINALLY USED
-# IS NOW VERY OLD AND DOESN'T SUPPORT ROS2. YOU CAN INSTALL flite with 
-
 import rclpy
 from rclpy.node import Node
 import subprocess
 from talker_interfaces.srv import Talk
 
-
-class Speaker(Node): 
+class Speaker(Node):
     def __init__(self):
         super().__init__("speaker_node")
-
-        # CONFIGURAR PARAMETROS
+        #Configurar parametros
         self.declare_parameter("enable_tts", True)
-        self.declare_parameter("tts_voice", "slt")      # Voz SLT (FEMENINA)
+        self.declare_parameter("tts_voice", "en_US/ljspeech_low")
         self.declare_parameter("tts_output", "play")
-        self.declare_parameter("tts_speed", 1.05)       # VELOCIDAD
-        self.declare_parameter("tts_volume", 1.0)       # VOLUMEN BASE
-        self.declare_parameter("tts_f0_mean", 160)      # TONO DE LA VOZ
-        self.declare_parameter("tts_f0_std", 35)        # Variación suave
-
-        # CARGAR PARAMETROS
-        self._enable = self.get_parameter("enable_tts").value
-        self._voice  = self.get_parameter("tts_voice").value
+        self.declare_parameter("tts_speed", 0.88)
+        self.declare_parameter("tts_noise_w", 0.9)
+        self.declare_parameter("tts_noise_scale", 0.7)
+        #Cargar parametros
+        self._enable = bool(self.get_parameter("enable_tts").value)
+        self._voice = self.get_parameter("tts_voice").value
         self._output = self.get_parameter("tts_output").value
-        self._speed  = float(self.get_parameter("tts_speed").value)
-        self._volume = float(self.get_parameter("tts_volume").value)
-        self._f0_mean = float(self.get_parameter("tts_f0_mean").value)
-        self._f0_std  = float(self.get_parameter("tts_f0_std").value)
-
-        # SERVICIO DE VOZ
+        self._speed = float(self.get_parameter("tts_speed").value)
+        self._noise_w = float(self.get_parameter("tts_noise_w").value)
+        self._noise_scale = float(self.get_parameter("tts_noise_scale").value)
+        #Servicio de voz
         self._srv = self.create_service(Talk, "talk", self.HandleSpeakText)
         self.get_logger().info("Servicio de voz listo: /talk")
-
         self.get_logger().info(
-            f"Voz: {self._voice} | Velocidad: {self._speed} | Volumen: {self._volume} | "
-            f"Pitch: {self._f0_mean} | Suavidad: {self._f0_std}"
+            f"Voz: {self._voice} | Speed(length_scale): {self._speed} | "
+            f"noise_w: {self._noise_w} | noise_scale: {self._noise_scale}"
         )
 
-    # CALLBACK DEL SERVICIO
+    #Callback del servicio
     def HandleSpeakText(self, request, response):
         text = request.text.strip()
         if not text:
@@ -50,49 +40,55 @@ class Speaker(Node):
             return response
         self.get_logger().info(f"Diciendo: '{text}'")
         if self._enable:
-            self._speak(text)
+            ok = self._speak(text)
+            if not ok:
+                response.success = False
+                response.message = "Error en TTS"
+                return response
         response.success = True
         response.message = "Texto reproducido"
         return response
 
-    # MOTOR DE VOZ - FLITE
-    def _speak(self, text: str):
+    #Motor de voz
+    def _speak(self, text: str) -> bool:
         try:
-            duration = max(0.5, min(2.0, self._speed))
-            pitch_mean = int(self._f0_mean)
-            pitch_std  = int(self._f0_std)
-            flite_cmd = [
-                "flite",
-                "-voice", self._voice,
-                "--setf", f"duration_stretch={duration}",
-                "--setf", f"int_f0_target_mean={pitch_mean}",
-                "--setf", f"int_f0_target_stddev={pitch_std}",
-                "-t", text
+            length_scale = max(0.5, min(2.0, float(self._speed)))
+            noise_w = max(0.0, min(1.0, float(self._noise_w)))
+            noise_scale = max(0.0, min(1.0, float(self._noise_scale)))
+            mimic3_cmd = [
+                "mimic3",
+                "--voice", self._voice,
+                "--length-scale", str(length_scale),
+                "--noise-w", str(noise_w),
+                "--noise-scale", str(noise_scale),
+                "--stdout",
+                text
             ]
-
             if self._output == "play":
-                subprocess.run(flite_cmd, check=True)
+                p = subprocess.Popen(mimic3_cmd, stdout=subprocess.PIPE)
+                subprocess.run(["aplay", "-q"], stdin=p.stdout, check=True)
+                p.wait()
             else:
-                flite_cmd.extend(["-o", "tts_output.wav"])
-                subprocess.run(flite_cmd, check=True)
-                subprocess.run(["aplay", "tts_output.wav"], check=True)
-
+                out_wav = "tts_output.wav"
+                with open(out_wav, "wb") as f:
+                    p = subprocess.Popen(mimic3_cmd, stdout=f)
+                    p.wait()
+                subprocess.run(["aplay", "-q", out_wav], check=True)
+            return True
         except Exception as e:
-            self.get_logger().error(f"Error en TTS: {e}")
-
+            self.get_logger().error(f"Error TTS (Mimic3): {e}")
+            return False
 
 def main(args=None):
-    rclpy.init(args=args)
-    node = Speaker()
-
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        node.get_logger().info("Nodo de voz detenido manualmente.")
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
-
+        rclpy.init(args=args)
+        node = Speaker()
+        try:
+            rclpy.spin(node)
+        except KeyboardInterrupt:
+            node.get_logger().info("Nodo de voz detenido manualmente.")
+        finally:
+            node.destroy_node()
+            rclpy.shutdown()
 
 if __name__ == "__main__":
     main()
