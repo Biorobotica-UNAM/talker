@@ -9,18 +9,13 @@
             exec="talker_node"
             name="talker_node"
             output="screen">
-
-            <!-- VOZ -->
-            <param name="tts_voice" value="slt"/>
-            <!-- VELOCIDAD -->
-            <param name="tts_speed" value="1.05"/>
-            <!-- VOLUMEN NORMAL, SE PUEDE SUBIR 1.3-1.5 -->
-            <param name="tts_volume" value="1.0"/>
-            <!-- PITCH -->
-            <param name="tts_f0_mean" value="160"/>
-            <!-- VARIACION DEL TONO -->
-            <param name="tts_f0_std" value="35"/>
-            <!-- HABLAR DIRECTO CON FLITE -->
+            <!-- VOZ MIMIC3 -->
+            <param name="tts_voice" value="en_US/ljspeech_low"/>
+            <!-- MÁS RÁPIDA Y ENERGÉTICA -->
+            <param name="tts_speed" value="0.90"/>
+            <param name="tts_noise_w" value="0.80"/>
+            <param name="tts_noise_scale" value="0.60"/>
+            <!-- REPRODUCIR DIRECTO -->
             <param name="tts_output" value="play"/>
 
         </node>
