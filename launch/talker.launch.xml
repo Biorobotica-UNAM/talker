@@ -2,27 +2,37 @@
 
     <group>
         
-        <push_ros_namespace namespace="talker"/>
+        <push_ros_namespace namespace="talk"/>
 
+<!--
+       <node
+            pkg="talk"
+            exec="talker_node"
+            name="talker_node"
+            output="screen">
+
+            <param name="tts_voice" value="slt"/>
+            <param name="tts_speed" value="1.0"/>
+            <param name="tts_volume" value="1.0"/>
+            <param name="tts_f0_mean" value="160"/>
+            <param name="tts_f0_std" value="35"/>
+            <param name="tts_output" value="play"/>
+
+        </node> 
+-->
         <node
             pkg="talker"
             exec="talker_node"
             name="talker_node"
             output="screen">
 
-            <!-- VOZ -->
-            <param name="tts_voice" value="slt"/>
+     
             <!-- VELOCIDAD -->
-            <param name="tts_speed" value="1.05"/>
-            <!-- VOLUMEN NORMAL, SE PUEDE SUBIR 1.3-1.5 -->
-            <param name="tts_volume" value="1.0"/>
-            <!-- PITCH -->
-            <param name="tts_f0_mean" value="160"/>
-            <!-- VARIACION DEL TONO -->
-            <param name="tts_f0_std" value="35"/>
-            <!-- HABLAR DIRECTO CON FLITE -->
-            <param name="tts_output" value="play"/>
-
+            <param name="speed" value="1.0"/>
+            <!-- ESCALA DE RUIDO PARA VARIAR LA VOZ (0.0-1.0) -->
+            <param name="noise_scale" value="0.667"/>
+            <!-- VOLUMEN (0.0-2.0) -->
+            <param name="volume" value="1.0"/>
         </node>
 
     </group>
