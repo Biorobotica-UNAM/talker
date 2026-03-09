@@ -2,7 +2,7 @@
 
     <group>
         
-        <push_ros_namespace namespace="talk"/>
+        <push_ros_namespace namespace="talker"/>
 
 <!--
        <node
