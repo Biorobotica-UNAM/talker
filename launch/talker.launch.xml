@@ -4,22 +4,6 @@
         
         <push_ros_namespace namespace="talker"/>
 
-<!--
-       <node
-            pkg="talk"
-            exec="talker_node"
-            name="talker_node"
-            output="screen">
-
-            <param name="tts_voice" value="slt"/>
-            <param name="tts_speed" value="1.0"/>
-            <param name="tts_volume" value="1.0"/>
-            <param name="tts_f0_mean" value="160"/>
-            <param name="tts_f0_std" value="35"/>
-            <param name="tts_output" value="play"/>
-
-        </node> 
--->
         <node
             pkg="talker"
             exec="talker_node"
