@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 import subprocess
 from talker_interfaces.srv import Talk
+from std_msgs.msg import String
 
 class Speaker(Node):
     def __init__(self):
@@ -24,6 +25,9 @@ class Speaker(Node):
         self._noise_scale = float(self.get_parameter("tts_noise_scale").value)
         #Servicio de voz
         self._srv = self.create_service(Talk, "talk", self.HandleSpeakText)
+        #Publisher para la GUI
+        self._gui_text_pub = self.create_publisher(String, "/hsrb/gui/text", 10)
+        self._gui_state_pub = self.create_publisher(String, "/hsrb/gui/state", 10)
         self.get_logger().info("Servicio de voz listo: /talk")
         self.get_logger().info(
             f"Voz: {self._voice} | Speed(length_scale): {self._speed} | "
@@ -39,6 +43,15 @@ class Speaker(Node):
             response.message = "Texto vacío"
             return response
         self.get_logger().info(f"Diciendo: '{text}'")
+
+        # Publicar estado y texto para la GUI
+        gui_state_msg = String()
+        gui_state_msg.data = "talk"
+        self._gui_state_pub.publish(gui_state_msg)
+        gui_text_msg = String()
+        gui_text_msg.data = text
+        self._gui_text_pub.publish(gui_text_msg)
+
         if self._enable:
             ok = self._speak(text)
             if not ok:
