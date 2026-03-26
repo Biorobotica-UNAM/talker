@@ -61,6 +61,11 @@ class Speaker(Node):
     def _speak(self, text: str):
         try:
             length_scale = 1.0 / self._speed
+            piper_dir = os.path.dirname(self._piper)
+
+            env = os.environ.copy()
+            env["LD_LIBRARY_PATH"] = piper_dir + ":" + env.get("LD_LIBRARY_PATH", "")
+
             piper_cmd = [
                 self._piper,
                 "--model", self._model,
@@ -68,20 +73,61 @@ class Speaker(Node):
                 "--noise_scale", str(self._noise),
                 "--output-raw"
             ]
-            
+
+            p1 = subprocess.Popen(
+                piper_cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=env
+            )
+
+            audio_data, piper_err = p1.communicate(input=(text + "\n").encode("utf-8"))
+
+            if p1.returncode != 0:
+                self.get_logger().error(
+                    f"Piper falló con código {p1.returncode}: "
+                    f"{piper_err.decode('utf-8', errors='ignore')}"
+                )
+                return False
+
+            if not audio_data:
+                self.get_logger().error(
+                    "Piper no generó audio. stderr: " +
+                    piper_err.decode("utf-8", errors="ignore")
+                )
+                return False
+
             sox_cmd = [
-                "sox", "-t", "raw", "-r", "22050", "-e", "signed-integer", 
-                "-b", "16", "-c", "1", "-", "-t", "alsa", "default", 
-                "vol", "0.9", "lowpass", "4000"
+                "sox",
+                "-t", "raw",
+                "-r", "22050",
+                "-e", "signed-integer",
+                "-b", "16",
+                "-c", "1",
+                "-",
+                "-t", "alsa",
+                "default",
+                "vol", str(self._volume),
+                "lowpass", "4000"
             ]
 
-            p1 = subprocess.Popen(piper_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            p2 = subprocess.Popen(sox_cmd, stdin=p1.stdout)
-            
-            # Enviamos el texto al proceso Piper
-            p1.stdin.write(text.encode('utf-8'))
-            p1.stdin.close()
-            p2.communicate()
+            p2 = subprocess.Popen(
+                sox_cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+
+            _, sox_err = p2.communicate(input=audio_data)
+
+            if p2.returncode != 0:
+                self.get_logger().error(
+                    f"Sox falló con código {p2.returncode}: "
+                    f"{sox_err.decode('utf-8', errors='ignore')}"
+                )
+                return False
+
             self.get_logger().info("ROBOT SAID: " + text)
             return True
 
