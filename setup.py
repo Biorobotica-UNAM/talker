@@ -22,6 +22,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
+            'talker_node_vero = talker.talker_node_vero:main',
             'talker_node = talker.talker_node:main',
         ],
     },
