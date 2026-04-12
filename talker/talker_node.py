@@ -5,6 +5,7 @@ from rclpy.node import Node
 import subprocess
 import os
 from pathlib import Path
+from std_msgs.msg import String 
 from talker_interfaces.srv import Talk
 
 class Speaker(Node):
@@ -33,9 +34,17 @@ class Speaker(Node):
         self._noise = float(self.get_parameter("noise_scale").value)
         self._volume = float(self.get_parameter("volume").value)
 
+        # Publishers para la GUI
+        self._gui_text_pub  = self.create_publisher(String, "/hsrb/gui/text",  10)
+
         self.create_service(Talk, "talk", self.HandleSpeakText) #Hri_talker
         self.get_logger().info("Piper TTS Service Ready: /talk")
         self.get_logger().info(f"Model: {os.path.basename(self._model)} | Speed: {self._speed} | Noise: {self._noise}, Volume: {self._volume}")
+
+    def _pub_gui_text(self, text: str):
+        msg = String()
+        msg.data = text
+        self._gui_text_pub.publish(msg)
 
     def HandleSpeakText(self, request, response):
         text = request.text.strip()
@@ -48,6 +57,7 @@ class Speaker(Node):
         self.get_logger().info(f"TALKING: '{text}'")
         
         if self._enable:
+            self._pub_gui_text(text)
             success = self._speak(text)
             response.success = success
             response.message = f"ROBOT SAID: {text}" if success else "ERROR IN TTS EXECUTION"
