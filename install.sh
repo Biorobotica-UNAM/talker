@@ -1,53 +1,50 @@
 #!/bin/bash
 
 # ============================================
-#  INSTALL SCRIPT FOR FLITE (Festival Lite)
-#  Tested on Ubuntu 22.04 / 24.04
-#  Author: Vero
+# INSTALL SCRIPT FOR TALKER
+# Piper TTS + SoX
+# Tested on Ubuntu 24.04
 # ============================================
 
-set -e  # Exit on error
+set -e  # Exit immediately if a command fails
 
 echo "============================================"
-echo "     Installing FLITE (Festival Lite)"
+echo "        Installing Talker Dependencies"
 echo "============================================"
 
 # ---- Update system ----
-echo "[1/5] Updating system..."
-sudo apt update -y
+
+echo "[1/3] Updating system packages..."
+sudo apt update
 
 # ---- Install dependencies ----
-echo "[2/5] Installing required dependencies..."
-sudo apt install -y build-essential git automake autoconf libtool
 
-# ---- Clone or update Flite ----
-echo "[3/5] Downloading Flite from official repository..."
-
-if [ ! -d "flite" ]; then
-    git clone https://github.com/festvox/flite.git
-else
-    echo "Flite folder already exists. Updating..."
-    cd flite && git pull && cd ..
-fi
-
-# ---- Build flite ----
-echo "[4/5] Building Flite..."
-cd flite
-./configure
-make -j$(nproc)
-
-# ---- Optional: install system-wide ----
-echo "[5/5] Installing system-wide..."
-sudo make install
-
-cd ..
-
-echo "============================================"
-echo "          FLITE INSTALLED SUCCESSFULLY"
-echo "============================================"
+echo "[2/3] Installing required dependencies..."
+sudo apt install -y \
+    sox \
+    libsox-fmt-all \
+    alsa-utils
 
 # ---- Verification ----
-echo "Testing flite..."
-flite -t "Flite has been installed correctly."
 
-echo "Done!"
+echo "[3/3] Verifying installation..."
+
+if command -v sox >/dev/null 2>&1; then
+    echo "SoX installed successfully:"
+    sox --version
+else
+    echo "ERROR: SoX installation failed."
+    exit 1
+fi
+
+echo ""
+
+if command -v aplay >/dev/null 2>&1; then
+    echo "ALSA utilities installed successfully."
+else
+    echo "WARNING: ALSA utilities were not found."
+fi
+
+echo "============================================"
+echo "      TALKER DEPENDENCIES INSTALLED"
+echo "============================================"
